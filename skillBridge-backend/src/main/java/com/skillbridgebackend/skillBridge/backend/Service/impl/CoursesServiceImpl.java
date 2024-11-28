@@ -5,8 +5,10 @@ import com.skillbridgebackend.skillBridge.backend.Dto.CourseResponse;
 import com.skillbridgebackend.skillBridge.backend.Dto.CoursesDto;
 import com.skillbridgebackend.skillBridge.backend.Dto.FeedbackDto;
 import com.skillbridgebackend.skillBridge.backend.Entity.Courses;
+import com.skillbridgebackend.skillBridge.backend.Entity.ESEntities.CoursesES;
 import com.skillbridgebackend.skillBridge.backend.Exception.ResourceNotFoundException;
 import com.skillbridgebackend.skillBridge.backend.Repository.CoursesRepository;
+import com.skillbridgebackend.skillBridge.backend.Repository.ESRepository.CoursesESRepository;
 import com.skillbridgebackend.skillBridge.backend.Service.CoursesService;
 import com.skillbridgebackend.skillBridge.backend.Utils.AppConstants;
 import io.netty.util.internal.StringUtil;
@@ -30,6 +32,9 @@ public class CoursesServiceImpl implements CoursesService {
 
     @Autowired
     private CoursesRepository coursesRepository;
+
+    @Autowired
+    private CoursesESRepository coursesESRepository;
 
     private final RedisTemplate<String, Object> redisTemplate;
 
@@ -60,6 +65,16 @@ public class CoursesServiceImpl implements CoursesService {
 
         //saving entity into database
         Courses newCourse =  coursesRepository.save(courses);
+
+        //saving to elasticsearch
+        CoursesES coursesES = new CoursesES();
+        coursesES.setId(coursesDto.getId());
+        coursesES.setCourseName(coursesDto.getCourseName());
+        coursesES.setCoursePrice(coursesDto.getCoursePrice());
+        coursesES.setDescription(coursesDto.getDescription());
+        coursesES.setCourseContent(coursesDto.getCourseContent());
+
+        coursesESRepository.save(coursesES);
 
         //convert entity to Dto
         CoursesDto courseResponse = mapToDto(newCourse);
