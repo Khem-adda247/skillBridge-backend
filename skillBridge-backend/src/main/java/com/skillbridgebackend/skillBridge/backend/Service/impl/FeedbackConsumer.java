@@ -40,23 +40,23 @@ public class FeedbackConsumer {
         feedback.setCourses(courses);
 
         feedbackRepository.save(feedback);
-
-        coursesESRepository.findById(kafkaProducerDto.getCourseId())
-                .orElseThrow(()-> new RuntimeException("course not found in elasticsearch"));
-
-        FeedbackES feedbackES = new FeedbackES();
-        try {
-            feedbackES.setId(kafkaProducerDto.getFeedbackDto().getId());
-            feedbackES.setEmail(kafkaProducerDto.getFeedbackDto().getEmail());
-            feedbackES.setBody(kafkaProducerDto.getFeedbackDto().getBody());
-            feedbackES.setCourses(courses);
-
-            feedbackESRepository.save(feedbackES);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
-        System.out.println("feedback saved in elasticsearch"+feedbackES);
+//
+//        coursesESRepository.findById(kafkaProducerDto.getCourseId())
+//                .orElseThrow(()-> new RuntimeException("course not found in elasticsearch"));
+//
+//        FeedbackES feedbackES = new FeedbackES();
+//        try {
+//            feedbackES.setId(kafkaProducerDto.getFeedbackDto().getId());
+//            feedbackES.setEmail(kafkaProducerDto.getFeedbackDto().getEmail());
+//            feedbackES.setBody(kafkaProducerDto.getFeedbackDto().getBody());
+//            feedbackES.setCourses(courses);
+//
+//            feedbackESRepository.save(feedbackES);
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+//
+//        System.out.println("feedback saved in elasticsearch"+feedbackES);
         System.out.println("feedback is "+feedback);
     }
 }

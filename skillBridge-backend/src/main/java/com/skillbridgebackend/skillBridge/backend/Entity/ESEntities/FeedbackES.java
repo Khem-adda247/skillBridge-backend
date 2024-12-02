@@ -20,6 +20,5 @@ public class FeedbackES {
     private String email;
     private String body;
 
-
-    private Courses courses;
+    private CoursesES courseId  ;
 }

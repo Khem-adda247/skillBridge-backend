@@ -65,16 +65,16 @@ public class CoursesServiceImpl implements CoursesService {
 
         //saving entity into database
         Courses newCourse =  coursesRepository.save(courses);
-
-        //saving to elasticsearch
-        CoursesES coursesES = new CoursesES();
-        coursesES.setId(coursesDto.getId());
-        coursesES.setCourseName(coursesDto.getCourseName());
-        coursesES.setCoursePrice(coursesDto.getCoursePrice());
-        coursesES.setDescription(coursesDto.getDescription());
-        coursesES.setCourseContent(coursesDto.getCourseContent());
-
-        coursesESRepository.save(coursesES);
+//
+//        //saving to elasticsearch
+//        CoursesES coursesES = new CoursesES();
+//        coursesES.setId(coursesDto.getId());
+//        coursesES.setCourseName(coursesDto.getCourseName());
+//        coursesES.setCoursePrice(coursesDto.getCoursePrice());
+//        coursesES.setDescription(coursesDto.getDescription());
+//        coursesES.setCourseContent(coursesDto.getCourseContent());
+//
+//        coursesESRepository.save(coursesES);
 
         //convert entity to Dto
         CoursesDto courseResponse = mapToDto(newCourse);
