@@ -15,4 +15,7 @@ public interface BuyCourseRepository extends JpaRepository<BuyCourse, Long> {
     @Query(value = "select * from purchased_courses bc where bc.user_id =:userId AND bc.course_id =:courseId", nativeQuery = true)
     Optional<BuyCourse> findByUserIdAndCourseId(Long userId, Long courseId);
 
+    @Query(value = "SELECT pc.course_name as courseName, COUNT(*) AS daily_buy_count FROM purchased_courses pc WHERE DATE(course_buy_time_stamp) = CURDATE() GROUP BY pc.course_name ORDER BY daily_buy_count DESC LIMIT 5", nativeQuery = true)
+    List<Object[]> topFiveCourses();
 }
+

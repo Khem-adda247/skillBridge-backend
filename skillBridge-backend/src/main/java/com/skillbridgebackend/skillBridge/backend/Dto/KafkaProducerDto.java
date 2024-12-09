@@ -11,6 +11,10 @@ import java.io.Serializable;
 @AllArgsConstructor
 @NoArgsConstructor
 public class KafkaProducerDto implements Serializable {
-    Long courseId;
-    FeedbackDto feedbackDto;
+    private Long courseId;
+    private Long userId;
+    private String feedbackBody;
+    private String name;
+    private String email;
+    private Boolean hasPurchased;
 }

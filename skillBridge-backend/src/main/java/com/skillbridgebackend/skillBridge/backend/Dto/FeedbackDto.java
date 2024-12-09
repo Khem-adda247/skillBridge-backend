@@ -11,10 +11,10 @@ import lombok.Setter;
 public class FeedbackDto {
     private long id;
 
-    @NotEmpty(message = "name should have at least two characters")
+//    @NotEmpty(message = "name should have at least two characters")
     private String name;
 
-    @NotEmpty(message = "Email should not be null or empty")
+//    @NotEmpty(message = "Email should not be null or empty")
     @Email
     private String email;
 

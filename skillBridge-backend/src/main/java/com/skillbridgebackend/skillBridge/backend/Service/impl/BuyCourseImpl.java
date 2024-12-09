@@ -1,9 +1,9 @@
 package com.skillbridgebackend.skillBridge.backend.Service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skillbridgebackend.skillBridge.backend.Dto.BuyCourseDto;
-import com.skillbridgebackend.skillBridge.backend.Dto.CoursesDto;
 import com.skillbridgebackend.skillBridge.backend.Dto.TopFiveCoursesDto;
 import com.skillbridgebackend.skillBridge.backend.Entity.BuyCourse;
 import com.skillbridgebackend.skillBridge.backend.Entity.Courses;
@@ -12,16 +12,16 @@ import com.skillbridgebackend.skillBridge.backend.Repository.BuyCourseRepository
 import com.skillbridgebackend.skillBridge.backend.Repository.CoursesRepository;
 import com.skillbridgebackend.skillBridge.backend.Repository.UserRepository;
 import com.skillbridgebackend.skillBridge.backend.Service.BuyCourseService;
+import io.netty.util.internal.StringUtil;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
+import java.sql.Date;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @Service
 public class BuyCourseImpl implements BuyCourseService {
@@ -36,9 +36,7 @@ public class BuyCourseImpl implements BuyCourseService {
     @Autowired
     private ModelMapper mapper;
 
-
-
-
+    @Autowired
     private final RedisTemplate<String, String> redisTemplate;
 
     @Autowired
@@ -80,7 +78,8 @@ public class BuyCourseImpl implements BuyCourseService {
             buy.setCourses(courses.get());
             buy.setUser(user.get());
             buy.setCourseName(courses.get().getCourseName());
-            buy.setBuyCount(1L);
+            buy.setCourseBuyTimeStamp(new Date(System.currentTimeMillis()));
+            buy.setCourseExpiry(LocalDateTime.now().plusMonths(3));
         }
         return buyCourseRepository.save(buy);
     }
@@ -96,44 +95,33 @@ public class BuyCourseImpl implements BuyCourseService {
         return buyCourseDtoList;
     }
 
-
-
     @Override
     public List<TopFiveCoursesDto> getTopFivePurchasedCourses() throws JsonProcessingException {
-        //fetching from redis
-        String key = "topFiveCourses";
-        String topCourses = redisTemplate.opsForValue().get(key);
+        String key = "topFiveCoursesForToday";
+        String fromRedis = redisTemplate.opsForValue().get(key);
 
-        // If the cache is not empty, deserialize and return the cached data
-        if (topCourses != null && !topCourses.isEmpty()) {
-            List<TopFiveCoursesDto> cachedTopFiveCourses = objectMapper.readValue(topCourses, objectMapper.getTypeFactory().constructCollectionType(List.class, TopFiveCoursesDto.class));
-            return cachedTopFiveCourses;
+        if (fromRedis != null) {
+            // If data is found in Redis, deserialize and returning it
+            return objectMapper.readValue(fromRedis, new TypeReference<>() {
+            });
         }
 
-        //fetching from db
-        List<BuyCourse> buyCourses = buyCourseRepository.findAll();
+        List<Object[]> dailyTopFive = buyCourseRepository.topFiveCourses();
+        List<TopFiveCoursesDto> dailyTopFiveCourses = new ArrayList<>();
 
-        // Aggregate buy counts by course name
-        Map<String, Long> courseBuyCounts = new HashMap<>();
+        for (Object[] topCourse : dailyTopFive) {
+            String courseName = (String) topCourse[0];
+            Long dailyBuyCount = (Long) topCourse[1];
 
-        for (BuyCourse buyCourse : buyCourses) {
-            courseBuyCounts.put(buyCourse.getCourseName(),
-                    courseBuyCounts.getOrDefault(buyCourse.getCourseName(), 0L) + buyCourse.getBuyCount());
+            TopFiveCoursesDto dto = new TopFiveCoursesDto(courseName, dailyBuyCount);
+            dailyTopFiveCourses.add(dto);
         }
 
-        List<TopFiveCoursesDto> topFiveCourses = courseBuyCounts.entrySet().stream()
-                .map(entry -> new TopFiveCoursesDto(entry.getKey(), entry.getValue()))
-                .sorted((c1, c2) -> Long.compare(c2.getBuyCount(), c1.getBuyCount())) // Sort by buyCount DESC
-                .limit(5) // Get top 5 courses
-                .collect(Collectors.toList());
+        String value = objectMapper.writeValueAsString(dailyTopFiveCourses);
+        redisTemplate.opsForValue().set(key, value, 1, TimeUnit.HOURS);
 
-        redisTemplate.opsForValue().set(key, objectMapper.writeValueAsString(topFiveCourses), 120, TimeUnit.SECONDS);
-
-        return topFiveCourses;
+        return dailyTopFiveCourses;
     }
-
-
-
 
     private BuyCourse mapToEntity(BuyCourseDto buyCourseDto){
         BuyCourse buyCourse = mapper.map(buyCourseDto, BuyCourse.class);
@@ -145,5 +133,11 @@ public class BuyCourseImpl implements BuyCourseService {
         //mapping using modelmapper maven
         BuyCourseDto buyCourseDto = mapper.map(buyCourse, BuyCourseDto.class);
         return buyCourseDto;
+    }
+
+    private TopFiveCoursesDto mapToTopFiveCourseDto(BuyCourse buyCourse){
+        //mapping using modelmapper maven
+        TopFiveCoursesDto topFiveCourseDto = mapper.map(buyCourse, TopFiveCoursesDto.class);
+        return topFiveCourseDto;
     }
 }

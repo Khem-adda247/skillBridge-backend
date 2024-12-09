@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.Serializable;
+import java.sql.Date;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Setter
 @Getter
@@ -23,7 +26,10 @@ public class BuyCourse implements Serializable {
     private String courseName;
 
     @Column(nullable = false)
-    private Long buyCount;
+    private Date courseBuyTimeStamp;
+
+    @Column(nullable = false)
+    private LocalDateTime courseExpiry;
 
     @ManyToOne
     @JoinColumn(name = "course_id", nullable = false)

@@ -1,16 +1,20 @@
 package com.skillbridgebackend.skillBridge.backend.Controller;
 
 import com.skillbridgebackend.skillBridge.backend.Dto.FeedbackDto;
+import com.skillbridgebackend.skillBridge.backend.Entity.User;
 import com.skillbridgebackend.skillBridge.backend.Service.FeedbackService;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/")
+@Slf4j
 public class FeedbackController {
 
     private FeedbackService feedbackService;
@@ -22,7 +26,8 @@ public class FeedbackController {
     //building add feedback rest api
     @PostMapping("/courses/{courseId}/feedbacks")
     public ResponseEntity<FeedbackDto> addFeedback(@PathVariable("courseId") long courseId,
-                                                  @Valid @RequestBody FeedbackDto feedbackDto){
+                                                   @Valid @RequestBody FeedbackDto feedbackDto
+    ){
         return new ResponseEntity<>(feedbackService.addFeedback(courseId, feedbackDto), HttpStatus.CREATED);
     }
 
